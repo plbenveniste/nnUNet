@@ -58,3 +58,18 @@ class nnUNetTrainerDiceCELoss_noSmooth(nnUNetTrainer):
             loss = DeepSupervisionWrapper(loss, weights)
         return loss
 
+
+class nnUNetTrainer_DiceCELoss_noSmooth_unbalancedSampling(nnUNetTrainerDiceCELoss_noSmooth):
+    ## This means that we use the probabilities in the dataset.json file to sample files which their associated probabilities
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
+                 device: torch.device = torch.device('cuda')):
+        super().__init__(plans, configuration, fold, dataset_json, device)
+        self.sampling_probabilities = True
+
+class nnUNetTrainer_DiceCELoss_noSmooth_unbalancedSampling_2000epochs(nnUNetTrainerDiceCELoss_noSmooth):
+    ## This means that we use the probabilities in the dataset.json file to sample files which their associated probabilities
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
+                 device: torch.device = torch.device('cuda')):
+        super().__init__(plans, configuration, fold, dataset_json, device)
+        self.sampling_probabilities = True
+        self.num_epochs = 2000
