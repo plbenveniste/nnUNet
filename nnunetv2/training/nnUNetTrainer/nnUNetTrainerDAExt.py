@@ -437,3 +437,10 @@ class nnUNetTrainerDAExt_DiceCELoss_noSmooth_300epochs(nnUNetTrainerDAExt_DiceCE
                  device: torch.device = torch.device('cuda')):
                      super().__init__(plans, configuration, fold, dataset_json, device)
                      self.num_epochs = 300
+
+
+class nnUNetTrainerDAExt_DiceCELoss_noSmooth_2000epochs(nnUNetTrainerDAExt_DiceCELoss_noSmooth):
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
+                 device: torch.device = torch.device('cuda')):
+                     super().__init__(plans, configuration, fold, dataset_json, device)
+                     self.num_epochs = 2000
