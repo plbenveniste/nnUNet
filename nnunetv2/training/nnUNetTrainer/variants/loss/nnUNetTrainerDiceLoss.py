@@ -29,13 +29,6 @@ class nnUNetTrainerDiceLoss(nnUNetTrainer):
         return loss
 
 
-class nnUNetTrainerDiceCELoss_2000epochs(nnUNetTrainerDiceCELoss):
-    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict, unpack_dataset: bool = True,
-                 device: torch.device = torch.device('cuda')):
-        super().__init__(plans, configuration, fold, dataset_json, unpack_dataset, device)
-        self.num_epochs = 2000
-
-
 class nnUNetTrainerDiceCELoss_noSmooth(nnUNetTrainer):
     def _build_loss(self):
         # set smooth to 0
@@ -64,22 +57,60 @@ class nnUNetTrainerDiceCELoss_noSmooth(nnUNetTrainer):
             # now wrap the loss
             loss = DeepSupervisionWrapper(loss, weights)
         return loss
+    
+
+class nnUNetTrainerDiceCELoss(nnUNetTrainer):
+    def _build_loss(self):
+        # set smooth to 0
+        if self.label_manager.has_regions:
+            loss = DC_and_BCE_loss({},
+                                   {'batch_dice': self.configuration_manager.batch_dice,
+                                    'do_bg': True, 'smooth': 1e-5, 'ddp': self.is_ddp},
+                                   use_ignore_label=self.label_manager.ignore_label is not None,
+                                   dice_class=MemoryEfficientSoftDiceLoss)
+        else:
+            loss = DC_and_CE_loss({'batch_dice': self.configuration_manager.batch_dice,
+                                   'smooth': 1e-5, 'do_bg': False, 'ddp': self.is_ddp}, {}, weight_ce=1, weight_dice=1,
+                                  ignore_label=self.label_manager.ignore_label,
+                                  dice_class=MemoryEfficientSoftDiceLoss)
+
+        if self.enable_deep_supervision:
+            deep_supervision_scales = self._get_deep_supervision_scales()
+
+            # we give each output a weight which decreases exponentially (division by 2) as the resolution decreases
+            # this gives higher resolution outputs more weight in the loss
+            weights = np.array([1 / (2 ** i) for i in range(len(deep_supervision_scales))])
+            weights[-1] = 0
+
+            # we don't use the lowest 2 outputs. Normalize weights so that they sum to 1
+            weights = weights / weights.sum()
+            # now wrap the loss
+            loss = DeepSupervisionWrapper(loss, weights)
+        return loss
+
+
+class nnUNetTrainerDiceCELoss_2000epochs(nnUNetTrainerDiceCELoss):
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict, 
+                 device: torch.device = torch.device('cuda')):
+        super().__init__(plans, configuration, fold, dataset_json, device)
+        self.num_epochs = 2000
+
 
 class nnUNetTrainerDiceCELoss_noSmooth_1500epochs(nnUNetTrainerDiceCELoss_noSmooth):
-    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict, unpack_dataset: bool = True,
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
                  device: torch.device = torch.device('cuda')):
-        super().__init__(plans, configuration, fold, dataset_json, unpack_dataset, device)
+        super().__init__(plans, configuration, fold, dataset_json, device)
         self.num_epochs = 1500
 
 class nnUNetTrainerDiceCELoss_noSmooth_2000epochs(nnUNetTrainerDiceCELoss_noSmooth):
-    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict, unpack_dataset: bool = True,
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
                  device: torch.device = torch.device('cuda')):
-        super().__init__(plans, configuration, fold, dataset_json, unpack_dataset, device)
+        super().__init__(plans, configuration, fold, dataset_json, device)
         self.num_epochs = 2000
 
 
 class nnUNetTrainerDiceCELoss_noSmooth_300epochs(nnUNetTrainerDiceCELoss_noSmooth):
     def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
-                 device: torch.device = torch.device('cuda')):
-                     super().__init__(plans, configuration, fold, dataset_json, device)
-                     self.num_epochs = 300
+                device: torch.device = torch.device('cuda')):
+        super().__init__(plans, configuration, fold, dataset_json, device)
+        self.num_epochs = 300
