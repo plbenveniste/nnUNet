@@ -40,15 +40,15 @@ def main():
     # In conversion_dict, we have the file names, remove those with derivatives in name:
     files = [file for file in conversion_dict.keys() if "derivatives" not in file]
 
-    # Contrast ratio: ## these should be edited based on the dataset of interest 
+    # Contrast ratio: equal to 1/sqrt(Number of images in the contrast)
     contrast_ratio = {
-        "UNIT1": 0.05,
-        "STIR": 0.10,
-        "PSIR": 0.05,
-        "T2star": 0.04,
-        "MEGRE": 0.04,
-        "T1w": 0.02,
-        "T2w": 0.20,
+        "UNIT1": 0.054,
+        "STIR": 0.104,
+        "PSIR": 0.052,
+        "T2star": 0.043,
+        "MEGRE": 0.043,
+        "T1w": 0.209,
+        "T2w": 0.018,
     }
 
     # Add probability to each relevant entry
