@@ -453,7 +453,7 @@ class nnUNetTrainerDAExt_DiceCELoss_noSmooth_2000epochs(nnUNetTrainerDAExt_DiceC
                      self.num_epochs = 2000
 
 
-class nnUNetTrainerDiceCELoss_noSmooth_unbalancedSampling_2000epochs(nnUNetTrainerDAExt_DiceCELoss_noSmooth):
+class nnUNetTrainerDAExt_DiceCELoss_noSmooth_unbalancedSampling_2000epochs(nnUNetTrainerDAExt_DiceCELoss_noSmooth):
     ## This means that we use the probabilities in the dataset.json file to sample files which their associated probabilities
     def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
                  device: torch.device = torch.device('cuda')):
