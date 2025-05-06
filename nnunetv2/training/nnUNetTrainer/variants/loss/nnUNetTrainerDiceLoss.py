@@ -61,7 +61,6 @@ class nnUNetTrainerDiceCELoss_noSmooth(nnUNetTrainer):
 
 class nnUNetTrainerDiceCELoss(nnUNetTrainer):
     def _build_loss(self):
-        # set smooth to 0
         if self.label_manager.has_regions:
             loss = DC_and_BCE_loss({},
                                    {'batch_dice': self.configuration_manager.batch_dice,
@@ -114,3 +113,18 @@ class nnUNetTrainerDiceCELoss_noSmooth_300epochs(nnUNetTrainerDiceCELoss_noSmoot
                 device: torch.device = torch.device('cuda')):
         super().__init__(plans, configuration, fold, dataset_json, device)
         self.num_epochs = 300
+
+class nnUNetTrainerDiceCELoss_noSmooth_unbalancedSampling(nnUNetTrainerDiceCELoss_noSmooth):
+    ## This means that we use the probabilities in the dataset.json file to sample files which their associated probabilities
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
+                 device: torch.device = torch.device('cuda')):
+        super().__init__(plans, configuration, fold, dataset_json, device)
+        self.sampling_probabilities = True
+
+class nnUNetTrainerDiceCELoss_noSmooth_unbalancedSampling_2000epochs(nnUNetTrainerDiceCELoss_noSmooth):
+    ## This means that we use the probabilities in the dataset.json file to sample files which their associated probabilities
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
+                 device: torch.device = torch.device('cuda')):
+        super().__init__(plans, configuration, fold, dataset_json, device)
+        self.sampling_probabilities = True
+        self.num_epochs = 2000
