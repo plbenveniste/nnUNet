@@ -9,7 +9,7 @@ Output:
     None
 
 Example:
-    python add_prob_to_dataset_json.py -c /path/to/conversion_dict.json -d /path/to/dataset.json
+    python add_contrast_probability_to_preprocessed_dataset.py -c /path/to/conversion_dict.json -d /path/to/dataset.json
 
 Author: Pierre-Louis Benveniste
 """

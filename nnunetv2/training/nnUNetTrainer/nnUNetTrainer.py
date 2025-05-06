@@ -671,6 +671,7 @@ class nnUNetTrainer(object):
 
         # Here we can generate the sampling probabilities for the training dataset
         if self.sampling_probabilities:
+            print("In order for the sampling probabilities to work, you need to first run the add_contrast_probability_to_preprocessed_dataset.py script.")
             training_data = self.splits[self.fold]['train']
             validation_data = self.splits[self.fold]['val']
             # Initialize the sampling probabilities
