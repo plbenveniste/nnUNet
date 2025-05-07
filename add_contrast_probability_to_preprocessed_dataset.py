@@ -19,8 +19,8 @@ import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Add contrast probability to dataset.json")
-    parser.add_argument("-c", "--conversion_dict", type=str, required=True, help="Path to the conversion dictionary JSON file")
-    parser.add_argument("-d", "--dataset_json", type=str, required=True, help="Path to the dataset.json file")
+    parser.add_argument("-c", "--conversion-dict", type=str, required=True, help="Path to the conversion dictionary JSON file")
+    parser.add_argument("-d", "--dataset-json", type=str, required=True, help="Path to the dataset.json file")
     args = parser.parse_args()
     return args
 
