@@ -27,7 +27,7 @@ from nnunetv2.training.loss.compound_losses import DC_and_BCE_loss, DC_and_CE_lo
 from nnunetv2.training.loss.dice import MemoryEfficientSoftDiceLoss
 from nnunetv2.training.loss.deep_supervision import DeepSupervisionWrapper
 from datetime import datetime
-import wandb 
+# import wandb 
 from torch import autocast 
 import os
 from nnunetv2.utilities.helpers import empty_cache, dummy_context
@@ -441,80 +441,80 @@ class nnUNetTrainerDAExt_DiceCELoss_noSmooth_300epochs_multimodal(nnUNetTrainerD
 
 
 
-class nnUNetTrainerDAExt_DiceCELoss_noSmooth_300epochs_wandb_multimodal(nnUNetTrainerDAExt_DiceCELoss_noSmooth_300epochs_multimodal):
+# class nnUNetTrainerDAExt_DiceCELoss_noSmooth_300epochs_wandb_multimodal(nnUNetTrainerDAExt_DiceCELoss_noSmooth_300epochs_multimodal):
 
-    def run_training(self):
-        self.on_train_start()
-        output_path = os.path.join("output_path", str(datetime.now().date()) +"_" +str(datetime.now().time()))
-        os.makedirs(output_path, exist_ok=True)
+#     def run_training(self):
+#         self.on_train_start()
+#         output_path = os.path.join("output_path", str(datetime.now().date()) +"_" +str(datetime.now().time()))
+#         os.makedirs(output_path, exist_ok=True)
 
-        wandb.init(project=f'ms-seg-nnunet',  dir=output_path)
+#         wandb.init(project=f'ms-seg-nnunet',  dir=output_path)
 
-        for epoch in range(self.current_epoch, self.num_epochs):
-            self.on_epoch_start()
+#         for epoch in range(self.current_epoch, self.num_epochs):
+#             self.on_epoch_start()
 
-            self.on_train_epoch_start()
-            train_outputs = []
-            for batch_id in range(self.num_iterations_per_epoch):
-                train_outputs.append(self.train_step(next(self.dataloader_train),batch_id))
-            self.on_train_epoch_end(train_outputs)
+#             self.on_train_epoch_start()
+#             train_outputs = []
+#             for batch_id in range(self.num_iterations_per_epoch):
+#                 train_outputs.append(self.train_step(next(self.dataloader_train),batch_id))
+#             self.on_train_epoch_end(train_outputs)
 
-            with torch.no_grad():
-                self.on_validation_epoch_start()
-                val_outputs = []
-                for batch_id in range(self.num_val_iterations_per_epoch):
-                    val_outputs.append(self.validation_step(next(self.dataloader_val)))
-                self.on_validation_epoch_end(val_outputs)
+#             with torch.no_grad():
+#                 self.on_validation_epoch_start()
+#                 val_outputs = []
+#                 for batch_id in range(self.num_val_iterations_per_epoch):
+#                     val_outputs.append(self.validation_step(next(self.dataloader_val)))
+#                 self.on_validation_epoch_end(val_outputs)
 
-            self.on_epoch_end()
-        wandb.finish()  
-        self.on_train_end()
+#             self.on_epoch_end()
+#         wandb.finish()  
+#         self.on_train_end()
 
-    def train_step(self, batch: dict, batch_id: int) -> dict:
-        data = batch['data']
-        target = batch['target']
+#     def train_step(self, batch: dict, batch_id: int) -> dict:
+#         data = batch['data']
+#         target = batch['target']
 
-        data = data.to(self.device, non_blocking=True)
-        if isinstance(target, list):
-            target = [i.to(self.device, non_blocking=True) for i in target]
-        else:
-            target = target.to(self.device, non_blocking=True)
+#         data = data.to(self.device, non_blocking=True)
+#         if isinstance(target, list):
+#             target = [i.to(self.device, non_blocking=True) for i in target]
+#         else:
+#             target = target.to(self.device, non_blocking=True)
 
-        self.optimizer.zero_grad(set_to_none=True)
-        # Autocast can be annoying
-        # If the device_type is 'cpu' then it's slow as heck and needs to be disabled.
-        # If the device_type is 'mps' then it will complain that mps is not implemented, even if enabled=False is set. Whyyyyyyy. (this is why we don't make use of enabled=False)
-        # So autocast will only be active if we have a cuda device.
-        with autocast(self.device.type, enabled=True) if self.device.type == 'cuda' else dummy_context():
-            output = self.network(data)
-            # del data
-            l = self.loss(output, target)
+#         self.optimizer.zero_grad(set_to_none=True)
+#         # Autocast can be annoying
+#         # If the device_type is 'cpu' then it's slow as heck and needs to be disabled.
+#         # If the device_type is 'mps' then it will complain that mps is not implemented, even if enabled=False is set. Whyyyyyyy. (this is why we don't make use of enabled=False)
+#         # So autocast will only be active if we have a cuda device.
+#         with autocast(self.device.type, enabled=True) if self.device.type == 'cuda' else dummy_context():
+#             output = self.network(data)
+#             # del data
+#             l = self.loss(output, target)
 
-            if batch_id == 0: 
-                train_image= data[0].detach().cpu().squeeze().float().numpy()
-                train_gt= target[0].detach().cpu().squeeze().float().numpy()[0]
-                train_pred = np.argmax(output[0].detach().cpu().squeeze().numpy(), axis=1)[0]
+#             if batch_id == 0: 
+#                 train_image= data[0].detach().cpu().squeeze().float().numpy()
+#                 train_gt= target[0].detach().cpu().squeeze().float().numpy()[0]
+#                 train_pred = np.argmax(output[0].detach().cpu().squeeze().numpy(), axis=1)[0]
                 
 
-                fig = plot_slices_combined(combined=train_image,
-                            gt=train_gt,
-                            pred=train_pred,
-                                    )
+#                 fig = plot_slices_combined(combined=train_image,
+#                             gt=train_gt,
+#                             pred=train_pred,
+#                                     )
 
-                wandb.log({"training images": wandb.Image(fig)})
-                plt.close(fig)
+#                 wandb.log({"training images": wandb.Image(fig)})
+#                 plt.close(fig)
 
-        if self.grad_scaler is not None:
-            self.grad_scaler.scale(l).backward()
-            self.grad_scaler.unscale_(self.optimizer)
-            torch.nn.utils.clip_grad_norm_(self.network.parameters(), 12)
-            self.grad_scaler.step(self.optimizer)
-            self.grad_scaler.update()
-        else:
-            l.backward()
-            torch.nn.utils.clip_grad_norm_(self.network.parameters(), 12)
-            self.optimizer.step()
-        return {'loss': l.detach().cpu().numpy()}
+#         if self.grad_scaler is not None:
+#             self.grad_scaler.scale(l).backward()
+#             self.grad_scaler.unscale_(self.optimizer)
+#             torch.nn.utils.clip_grad_norm_(self.network.parameters(), 12)
+#             self.grad_scaler.step(self.optimizer)
+#             self.grad_scaler.update()
+#         else:
+#             l.backward()
+#             torch.nn.utils.clip_grad_norm_(self.network.parameters(), 12)
+#             self.optimizer.step()
+#         return {'loss': l.detach().cpu().numpy()}
 
 class nnUNetTrainerDAExt_DiceCELoss_noSmooth_1000epochs_multimodal(nnUNetTrainerDAExt_DiceCELoss_noSmooth_multimodal):
     def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
