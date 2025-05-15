@@ -474,3 +474,19 @@ class nnUNetTrainerDAExt_DiceCELoss_noSmooth_unbalancedSampling_2000epochs(nnUNe
         super().__init__(plans, configuration, fold, dataset_json, device)
         self.sampling_probabilities = True
         self.num_epochs = 2000
+
+class nnUNetTrainerDAExt_DiceCELoss_noSmooth_unbalancedSampling_500epochs(nnUNetTrainerDAExt_DiceCELoss_noSmooth):
+    ## This means that we use the probabilities in the dataset.json file to sample files which their associated probabilities
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
+                 device: torch.device = torch.device('cuda')):
+        super().__init__(plans, configuration, fold, dataset_json, device)
+        self.sampling_probabilities = True
+        self.num_epochs = 500
+
+class nnUNetTrainerDAExt_DiceCELoss_noSmooth_unbalancedSampling_500epochs_fromScratch(nnUNetTrainerDAExt_DiceCELoss_noSmooth):
+    ## This means that we use the probabilities in the dataset.json file to sample files which their associated probabilities
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
+                 device: torch.device = torch.device('cuda')):
+        super().__init__(plans, configuration, fold, dataset_json, device)
+        self.sampling_probabilities = True
+        self.num_epochs = 500
