@@ -672,24 +672,39 @@ class nnUNetTrainer(object):
         # Here we can generate the sampling probabilities for the training dataset
         if self.sampling_probabilities:
             print("In order for the sampling probabilities to work, you need to first run the add_contrast_probability_to_preprocessed_dataset.py script.")
-            training_data = self.splits[self.fold]['train']
-            validation_data = self.splits[self.fold]['val']
-            # Initialize the sampling probabilities
-            train_sampl_prob = np.zeros(len(training_data))
-            val_sampl_prob = np.zeros(len(validation_data))
-            # Get training files in the dataset
-            data_dict = self.dataset_json['training']
-            # Iterate through the files in the training_data_dict
-            for i, file in enumerate(data_dict):
-                # Get the file name
-                file_name = file['image'].split('/')[-1].replace('.nii.gz', '')
-                # Get the argument of file_name in the training_data if it exists
-                if file_name in training_data:
-                    arg = training_data.index(file_name)
+            # We have to do a particular case if fold is "all" because the splits are not defined
+            # in this case
+            if self.fold == "all":
+                # Get the training files in the dataset
+                data_dict = self.dataset_json['training']
+                # Initialize the sampling probabilities
+                train_sampl_prob = np.zeros(len(data_dict))
+                # Iterate through the files in the training_data_dict
+                for i, file in enumerate(data_dict):
+                    # Get the file name
+                    file_name = file['image'].split('/')[-1].replace('.nii.gz', '')
+                    arg = dataset_tr.identifiers.index(file_name)
                     train_sampl_prob[arg] = data_dict[i]['probability']
-                elif file_name in validation_data:
-                    arg = validation_data.index(file_name)
-                    val_sampl_prob[arg] = data_dict[i]['probability']  
+                val_sampl_prob = train_sampl_prob
+            else:
+                training_data = self.splits[self.fold]['train']
+                validation_data = self.splits[self.fold]['val']
+                # Initialize the sampling probabilities
+                train_sampl_prob = np.zeros(len(training_data))
+                val_sampl_prob = np.zeros(len(validation_data))
+                # Get training files in the dataset
+                data_dict = self.dataset_json['training']
+                # Iterate through the files in the training_data_dict
+                for i, file in enumerate(data_dict):
+                    # Get the file name
+                    file_name = file['image'].split('/')[-1].replace('.nii.gz', '')
+                    # Get the argument of file_name in the training_data if it exists
+                    if file_name in training_data:
+                        arg = training_data.index(file_name)
+                        train_sampl_prob[arg] = data_dict[i]['probability']
+                    elif file_name in validation_data:
+                        arg = validation_data.index(file_name)
+                        val_sampl_prob[arg] = data_dict[i]['probability']  
 
             # Probabilities need to be normalized
             train_sampl_prob = train_sampl_prob / np.sum(train_sampl_prob)
