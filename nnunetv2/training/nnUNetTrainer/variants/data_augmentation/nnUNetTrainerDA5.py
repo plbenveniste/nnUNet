@@ -913,13 +913,7 @@ class nnUNetTrainerDA5_10epochs(nnUNetTrainerDA5):
         self.num_epochs = 10
 
 
-
-class nnUNetTrainerDA5_300epochs(nnUNetTrainerDA5):
-    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
-                 device: torch.device = torch.device('cuda')):
-        super().__init__(plans, configuration, fold, dataset_json, device)
-        self.num_epochs = 300
-
+class nnUNetTrainerDA5_DiceCELoss_noSmooth(nnUNetTrainerDA5):
     def _build_loss(self):
         # set smooth to 0
         if self.label_manager.has_regions:
@@ -947,3 +941,10 @@ class nnUNetTrainerDA5_300epochs(nnUNetTrainerDA5):
             # now wrap the loss
             loss = DeepSupervisionWrapper(loss, weights)
         return loss
+
+
+class nnUNetTrainerDA5_DiceCELoss_noSmooth_300epochs(nnUNetTrainerDA5_DiceCELoss_noSmooth):
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
+                 device: torch.device = torch.device('cuda')):
+        super().__init__(plans, configuration, fold, dataset_json, device)
+        self.num_epochs = 300
