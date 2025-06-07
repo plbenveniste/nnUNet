@@ -151,6 +151,12 @@ class nnUNetTrainer(object):
         self.num_epochs = 1000
         self.current_epoch = 0
         self.enable_deep_supervision = True
+        
+        # Addition for enabling sampling probabilities
+        ## We save how the data are split in training/validation for each fold
+        self.splits = None 
+        # we add the sampling probabilities to the dataset class. It's a list with the probabilities of each sample in the dataset
+        self.sampling_probabilities = False  # -> self.initialize
 
         ### Dealing with labels/regions
         self.label_manager = self.plans_manager.get_label_manager(dataset_json)
@@ -184,7 +190,7 @@ class nnUNetTrainer(object):
         # self.configure_rotation_dummyDA_mirroring_and_inital_patch_size and will be saved in checkpoints
 
         ### checkpoint saving stuff
-        self.save_every = 50
+        self.save_every = 10
         self.disable_checkpointing = False
 
         self.was_initialized = False
@@ -584,6 +590,9 @@ class nnUNetTrainer(object):
                 splits = load_json(splits_file)
                 self.print_to_log_file(f"The split file contains {len(splits)} splits.")
 
+            # Save the splits in the class for later use
+            self.splits = splits
+
             self.print_to_log_file("Desired fold for training: %d" % self.fold)
             if self.fold < len(splits):
                 tr_keys = splits[self.fold]['train']
@@ -657,19 +666,63 @@ class nnUNetTrainer(object):
 
         dataset_tr, dataset_val = self.get_tr_and_val_datasets()
 
+        train_sampl_prob = None
+        val_sampl_prob = None
+
+        # Here we can generate the sampling probabilities for the training dataset
+        if self.sampling_probabilities:
+            print("In order for the sampling probabilities to work, you need to first run the add_contrast_probability_to_preprocessed_dataset.py script.")
+            # We have to do a particular case if fold is "all" because the splits are not defined
+            # in this case
+            if self.fold == "all":
+                # Get the training files in the dataset
+                data_dict = self.dataset_json['training']
+                # Initialize the sampling probabilities
+                train_sampl_prob = np.zeros(len(data_dict))
+                # Iterate through the files in the training_data_dict
+                for i, file in enumerate(data_dict):
+                    # Get the file name
+                    file_name = file['image'].split('/')[-1].replace('.nii.gz', '')
+                    arg = dataset_tr.identifiers.index(file_name)
+                    train_sampl_prob[arg] = data_dict[i]['probability']
+                val_sampl_prob = train_sampl_prob
+            else:
+                training_data = self.splits[self.fold]['train']
+                validation_data = self.splits[self.fold]['val']
+                # Initialize the sampling probabilities
+                train_sampl_prob = np.zeros(len(training_data))
+                val_sampl_prob = np.zeros(len(validation_data))
+                # Get training files in the dataset
+                data_dict = self.dataset_json['training']
+                # Iterate through the files in the training_data_dict
+                for i, file in enumerate(data_dict):
+                    # Get the file name
+                    file_name = file['image'].split('/')[-1].replace('.nii.gz', '')
+                    # Get the argument of file_name in the training_data if it exists
+                    if file_name in training_data:
+                        arg = training_data.index(file_name)
+                        train_sampl_prob[arg] = data_dict[i]['probability']
+                    elif file_name in validation_data:
+                        arg = validation_data.index(file_name)
+                        val_sampl_prob[arg] = data_dict[i]['probability']  
+
+            # Probabilities need to be normalized
+            train_sampl_prob = train_sampl_prob / np.sum(train_sampl_prob)
+            val_sampl_prob = val_sampl_prob / np.sum(val_sampl_prob) 
+
         dl_tr = nnUNetDataLoader(dataset_tr, self.batch_size,
                                  initial_patch_size,
                                  self.configuration_manager.patch_size,
                                  self.label_manager,
                                  oversample_foreground_percent=self.oversample_foreground_percent,
-                                 sampling_probabilities=None, pad_sides=None, transforms=tr_transforms,
+                                 sampling_probabilities=train_sampl_prob, pad_sides=None, transforms=tr_transforms,
                                  probabilistic_oversampling=self.probabilistic_oversampling)
         dl_val = nnUNetDataLoader(dataset_val, self.batch_size,
                                   self.configuration_manager.patch_size,
                                   self.configuration_manager.patch_size,
                                   self.label_manager,
                                   oversample_foreground_percent=self.oversample_foreground_percent,
-                                  sampling_probabilities=None, pad_sides=None, transforms=val_transforms,
+                                  sampling_probabilities=val_sampl_prob, pad_sides=None, transforms=val_transforms,
                                   probabilistic_oversampling=self.probabilistic_oversampling)
 
         allowed_num_processes = get_allowed_n_proc_DA()
