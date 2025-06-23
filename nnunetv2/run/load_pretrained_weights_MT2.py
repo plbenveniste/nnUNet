@@ -40,7 +40,7 @@ def load_pretrained_weights_MT2(network, fname, verbose=False, stemid:str =None,
             '.seg_layers.', 'seg_outputs', 'stem'
         ]
 
-    skip_strings_in_pretrained = []
+    # skip_strings_in_pretrained = []
     if isinstance(network, DDP):
         mod = network.module
     else:
@@ -50,25 +50,25 @@ def load_pretrained_weights_MT2(network, fname, verbose=False, stemid:str =None,
 
     model_dict = mod.state_dict()
     # verify that all but the segmentation layers have the same shape
-    # for key, _ in model_dict.items():
-    #     # print(key)
-    #     if all([i not in key for i in skip_strings_in_pretrained]):
-    #         assert key in pretrained_dict, \
-    #             f"Key {key} is missing in the pretrained model weights. The pretrained weights do not seem to be " \
-    #             f"compatible with your network."
+    for key, _ in model_dict.items():
+        # print(key)
+        if all([i not in key for i in skip_strings_in_pretrained]):
+            assert key in pretrained_dict, \
+                f"Key {key} is missing in the pretrained model weights. The pretrained weights do not seem to be " \
+                f"compatible with your network."
 
-    #         if not model_dict[key].shape == pretrained_dict[key].shape:
-    #             print('Warning: keys shape do not fit: ', key)
-    #             skip_strings_in_pretrained.append(key)
+            if not model_dict[key].shape == pretrained_dict[key].shape:
+                print('Warning: keys shape do not fit: ', key)
+                skip_strings_in_pretrained.append(key)
 
-    # for key, _ in model_dict.items():
-    #     if all([i not in key for i in skip_strings_in_pretrained]):
-    #         assert key in pretrained_dict, \
-    #             f"Key {key} is missing in the pretrained model weights. The pretrained weights do not seem to be " \
-    #             f"compatible with your network."
-    #         assert len(skip_strings_in_pretrained) < 7, \
-    #             f"The shape of the parameters of more than 7 keys are not the same. Pretrained model: " \
-    #             f"The pretrained model does not seem to be compatible with your network."
+    for key, _ in model_dict.items():
+        if all([i not in key for i in skip_strings_in_pretrained]):
+            assert key in pretrained_dict, \
+                f"Key {key} is missing in the pretrained model weights. The pretrained weights do not seem to be " \
+                f"compatible with your network."
+            assert len(skip_strings_in_pretrained) < 7, \
+                f"The shape of the parameters of more than 7 keys are not the same. Pretrained model: " \
+                f"The pretrained model does not seem to be compatible with your network."
 
     # fun fact: in principle this allows loading from parameters that do not cover the entire network. For example pretrained
     # encoders. Not supported by this function though (see assertions above)
