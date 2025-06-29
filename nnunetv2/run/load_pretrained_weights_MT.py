@@ -20,7 +20,7 @@ def load_pretrained_weights_MT(network, fname, verbose=False, stemid:str =None, 
     if dist.is_initialized():
         saved_model = torch.load(fname, map_location=torch.device('cuda', dist.get_rank()))
     else:
-        saved_model = torch.load(fname)
+        saved_model = torch.load(fname, weights_only=False)
     if fname.endswith('pth'):
         pretrained_dict = saved_model['network_weights']
     elif fname.endswith('model'):
@@ -131,7 +131,7 @@ def load_pretrained_weights_encoder(network, fname, verbose=False):
     if dist.is_initialized():
         saved_model = torch.load(fname, map_location=torch.device('cuda', dist.get_rank()))
     else:
-        saved_model = torch.load(fname, weights_only=False)
+        saved_model = torch.load(fname)
     if fname.endswith('pth'):
         pretrained_dict = saved_model['network_weights']
     elif fname.endswith('model'):
