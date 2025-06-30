@@ -42,10 +42,13 @@ def main():
 
     # Contrast ratio: equal to 1/sqrt(Number of images in the contrast)
     contrast_ratio = {
-        "STIR": 0.141,
-        "PSIR": 0.2,
-        "T2w": 0.1,
-        "MP2RAGE": 0.2,
+        "UNIT1": 0.054,
+        "STIR": 0.104,
+        "PSIR": 0.052,
+        "T2star": 0.043,
+        "MEGRE": 0.043,
+        "T1w": 0.209,
+        "T2w": 0.018,
     }
 
     # Add probability to each relevant entry
