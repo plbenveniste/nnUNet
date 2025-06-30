@@ -119,6 +119,13 @@ class nnUNetTrainerDiceCELoss_noSmooth_4000epochs_stem035(nnUNetTrainerDiceCELos
                  device: torch.device = torch.device('cuda')):
         super().__init__(plans, configuration, fold, dataset_json, device)
         self.num_epochs = 4000
+
+
+class nnUNetTrainerDiceCELoss_noSmooth_4000epochs_stem351_5(nnUNetTrainerDiceCELoss_noSmooth):
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
+                 device: torch.device = torch.device('cuda')):
+        super().__init__(plans, configuration, fold, dataset_json, device)
+        self.num_epochs = 4000
     
 
 class nnUNetTrainerDiceCELoss_noSmooth_4000epochs_fromScratch(nnUNetTrainerDiceCELoss_noSmooth):
@@ -149,6 +156,24 @@ class nnUNetTrainerDiceCELoss_noSmooth_unbalancedSampling_2000epochs(nnUNetTrain
         self.num_epochs = 2000
 
 class nnUNetTrainerDiceCELoss_noSmooth_unbalancedSampling_4000epochs(nnUNetTrainerDiceCELoss_noSmooth):
+    ## This means that we use the probabilities in the dataset.json file to sample files which their associated probabilities
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
+                 device: torch.device = torch.device('cuda')):
+        super().__init__(plans, configuration, fold, dataset_json, device)
+        self.sampling_probabilities = True
+        self.num_epochs = 4000
+
+    
+class nnUNetTrainerDiceCELoss_noSmooth_unbalancedSampling_4000epochs_stem035(nnUNetTrainerDiceCELoss_noSmooth):
+    ## This means that we use the probabilities in the dataset.json file to sample files which their associated probabilities
+    def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
+                 device: torch.device = torch.device('cuda')):
+        super().__init__(plans, configuration, fold, dataset_json, device)
+        self.sampling_probabilities = True
+        self.num_epochs = 4000
+
+    
+class nnUNetTrainerDiceCELoss_noSmooth_unbalancedSampling_4000epochs_stem351_5(nnUNetTrainerDiceCELoss_noSmooth):
     ## This means that we use the probabilities in the dataset.json file to sample files which their associated probabilities
     def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict,
                  device: torch.device = torch.device('cuda')):
