@@ -180,6 +180,67 @@ def get_tp_fp_fn_tn(net_output, gt, axes=None, mask=None, square=False):
     return tp, fp, fn, tn
 
 
+class TverskyLoss(nn.Module):
+    def __init__(self, apply_nonlin: Callable = None, batch_dice: bool = False, do_bg: bool = True,
+                 smooth: float = 1e-5, ddp: bool = True, alpha: float = 0.3, beta: float = 0.7):
+        """
+        Tversky loss: generalisation of Dice where alpha weights FP and beta weights FN.
+        alpha=0.5, beta=0.5 recovers Dice. alpha < beta penalises false negatives more,
+        which helps with small lesion detection.
+        """
+        super().__init__()
+        self.do_bg = do_bg
+        self.batch_dice = batch_dice
+        self.apply_nonlin = apply_nonlin
+        self.smooth = smooth
+        self.ddp = ddp
+        self.alpha = alpha
+        self.beta = beta
+
+    def forward(self, x, y, loss_mask=None):
+        if self.apply_nonlin is not None:
+            x = self.apply_nonlin(x)
+
+        axes = tuple(range(2, x.ndim))
+
+        with torch.no_grad():
+            if x.ndim != y.ndim:
+                y = y.view((y.shape[0], 1, *y.shape[1:]))
+
+            if x.shape == y.shape:
+                y_onehot = y
+            else:
+                y_onehot = torch.zeros(x.shape, device=x.device, dtype=torch.bool)
+                y_onehot.scatter_(1, y.long(), 1)
+
+            if not self.do_bg:
+                y_onehot = y_onehot[:, 1:]
+
+        if not self.do_bg:
+            x = x[:, 1:]
+
+        if loss_mask is None:
+            tp = (x * y_onehot).sum(axes)
+            fp = (x * (~y_onehot)).sum(axes)
+            fn = ((1 - x) * y_onehot).sum(axes)
+        else:
+            tp = (x * y_onehot * loss_mask).sum(axes)
+            fp = (x * (~y_onehot) * loss_mask).sum(axes)
+            fn = ((1 - x) * y_onehot * loss_mask).sum(axes)
+
+        if self.batch_dice:
+            if self.ddp:
+                tp = AllGatherGrad.apply(tp).sum(0)
+                fp = AllGatherGrad.apply(fp).sum(0)
+                fn = AllGatherGrad.apply(fn).sum(0)
+            tp = tp.sum(0)
+            fp = fp.sum(0)
+            fn = fn.sum(0)
+
+        tversky = (tp + self.smooth) / (torch.clip(tp + self.alpha * fp + self.beta * fn + self.smooth, 1e-8))
+        return -tversky.mean()
+
+
 if __name__ == '__main__':
     from nnunetv2.utilities.helpers import softmax_helper_dim1
     pred = torch.rand((2, 3, 32, 32, 32))
